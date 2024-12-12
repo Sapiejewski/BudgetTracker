@@ -6,17 +6,17 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 export default function SignIn() {
   const { signIn } = useSession();
-  const [username, setUsername] = useState('');
+  const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<{ username?: string, password?: string }>({});
+  const [error, setError] = useState<{ login?: string, password?: string }>({});
   const apiURL = process.env.EXPO_PUBLIC_API_URL;
   const validateInputs = () => {
     let isValid = true;
-    const errors: { username?: string, password?: string } = {};
+    const errors: { login?: string, password?: string } = {};
 
-    if (!username) {
-      errors.username = "username is required.";
+    if (!login) {
+      errors.login = "Login is required.";
       isValid = false;
     }
 
@@ -39,7 +39,7 @@ export default function SignIn() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ "username":username, "password":password }),
+        body: JSON.stringify({ "login":login, "password":password }),
       });
 
       if (response.ok) {
@@ -71,15 +71,15 @@ export default function SignIn() {
         <TextInput
           style={styles.input}
           placeholder='Login'
-          value={username}
+          value={login}
           onChangeText={(text) => {
-            setUsername(text);
-            if (error.login) setError((prev) => ({ ...prev, username: '' }));
+            setLogin(text);
+            if (error.login) setError((prev) => ({ ...prev, login: '' }));
           }}
           autoCorrect={false}
           autoCapitalize='none'
         />
-        {error.username && <Text style={styles.errorText}>{error.username}</Text>}
+        {error.login && <Text style={styles.errorText}>{error.login}</Text>}
 
         <TextInput
           style={styles.input}

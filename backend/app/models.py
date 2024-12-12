@@ -7,10 +7,11 @@ class User(Base):
     __tablename__ = 'Users'
     
     UserID = Column(Integer, primary_key=True, index=True)
-    username = Column(String(100), index=True, unique=True)
+    login = Column(String(100), index=True, unique=True)
     name  = Column(String(100))
     email = Column(String(100), unique=True, index=True)
     passwordHash = Column(String(100))
+    surname = Column(String(100))
     creationDate = Column(String(100))
     members = relationship("GroupMembers", back_populates="user")
 

@@ -7,20 +7,27 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 export default function SignUp() {
   const apiURL = process.env.EXPO_PUBLIC_API_URL;
   const { signIn, isLoading: sessionLoading } = useSession();
+  const [login, setLogin] = useState('');
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<{ email?: string, name?: string, surname?: string , password?: string, confirmPassword?: string }>({});
+  const [error, setError] = useState<{ login?:string,email?: string, name?: string, surname?: string , password?: string, confirmPassword?: string }>({});
 
   const validateInputs = () => {
     let isValid = true;
-    const errors: { email?: string, name?: string,surname?: string, password?: string, confirmPassword?: string } = {};
+    const errors: { login?:string,email?: string, name?: string,surname?: string, password?: string, confirmPassword?: string } = {};
 
     if (!email || !/\S+@\S+\.\S+/.test(email)) {
       errors.email = "A valid email is required.";
+      isValid = false;
+    }
+
+    
+    if (!login) {
+      errors.login = "Login is required.";
       isValid = false;
     }
 
@@ -57,7 +64,7 @@ export default function SignUp() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ "email":email,"name": name,"surname": surname, "password":password }),
+        body: JSON.stringify({ "login":login,"email":email,"name": name,"surname": surname, "password":password }),
       });
       if (res.ok) {
         console.log("OK")      
@@ -79,6 +86,18 @@ export default function SignUp() {
       <Text style={styles.title}>Sign Up</Text>
 
       <View style={styles.inputView}>
+      <TextInput
+          style={styles.input}
+          placeholder='Login'
+          value={login}
+          onChangeText={(text) => {
+            setLogin(text);
+            if (error.login) setError((prev) => ({ ...prev, login: '' }));
+          }}
+          autoCorrect={false}
+          autoCapitalize='none'
+        />
+        {error.email && <Text style={styles.errorText}>{error.email}</Text>}
         <TextInput
           style={styles.input}
           placeholder='Email'
