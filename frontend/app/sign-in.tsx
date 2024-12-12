@@ -6,17 +6,17 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 export default function SignIn() {
   const { signIn } = useSession();
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<{ login?: string, password?: string }>({});
+  const [error, setError] = useState<{ username?: string, password?: string }>({});
   const apiURL = process.env.EXPO_PUBLIC_API_URL;
   const validateInputs = () => {
     let isValid = true;
-    const errors: { login?: string, password?: string } = {};
+    const errors: { username?: string, password?: string } = {};
 
-    if (!email) {
-      errors.login = "Login is required.";
+    if (!username) {
+      errors.username = "username is required.";
       isValid = false;
     }
 
@@ -39,12 +39,12 @@ export default function SignIn() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ "username":username, "password":password }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        if (data["login"] === true){
+        if (data["message"] === "Login successful"){
           signIn();
           router.replace('/'); 
         }
@@ -71,15 +71,15 @@ export default function SignIn() {
         <TextInput
           style={styles.input}
           placeholder='Login'
-          value={email}
+          value={username}
           onChangeText={(text) => {
-            setEmail(text);
-            if (error.login) setError((prev) => ({ ...prev, login: '' }));
+            setUsername(text);
+            if (error.login) setError((prev) => ({ ...prev, username: '' }));
           }}
           autoCorrect={false}
           autoCapitalize='none'
         />
-        {error.login && <Text style={styles.errorText}>{error.login}</Text>}
+        {error.username && <Text style={styles.errorText}>{error.username}</Text>}
 
         <TextInput
           style={styles.input}

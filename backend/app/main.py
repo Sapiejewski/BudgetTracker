@@ -1,3 +1,4 @@
+import os
 import datetime
 import random
 import string
@@ -8,9 +9,33 @@ import app.models as models
 from app.db import engine, SessionLocal
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer,OAuth2PasswordRequestForm
+# from app.auth import auth
+from passlib.context import CryptContext
+from jose import JWTError, jwt
+from datetime import timedelta
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
 
 app = FastAPI()
+# app.include_router(auth.router)
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 models.Base.metadata.create_all(bind=engine)
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+def create_access_token(data: dict, expires_delta: timedelta | None = None):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + expires_delta if expires_delta else timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
 class UserBase(BaseModel):
@@ -32,11 +57,7 @@ def get_db():
     finally:
         db.close()
 db_dependency = Annotated[Session,Depends(get_db)]
-def generate_join_code(db: Session):
-    while True:
-        code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-        if not db.query(models.Group).filter_by(join_code=code).first():
-            return code
+Token= Annotated[str, Depends(oauth2_scheme)]
 
 origins = [
     "http://localhost:8081",  
@@ -45,27 +66,36 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
+    allow_origins=origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+def generate_join_code(db: Session):
+    while True:
+        code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        if not db.query(models.Group).filter_by(join_code=code).first():
+            return code
+
 
 @app.post("/register",status_code=status.HTTP_201_CREATED)
-async def register(user: UserBase, db: db_dependency):
+async def register(user: UserBase, token:Token,db: db_dependency):
     db_user = models.User(username=user.username,name=user.name,email=user.email,passwordHash=user.password,creationDate=datetime.datetime.now().strftime("%Y-%m-%d")) 
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    return db_user
+    return {"db_user":db_user,"token":token}
 
-
-
-@app.get("/login",status_code=status.HTTP_200_OK)
-async def login(username :str, password:str,db:db_dependency):
-    user = db.query(models.User).filter(models.User.username==username ).first()
+class LoginRequest(BaseModel):
+    username:str
+    password:str
+@app.post("/login",status_code=status.HTTP_200_OK)
+async def login(request:LoginRequest, db:db_dependency):
+    print("ciota")
+    user = db.query(models.User).filter(models.User.username==request.username).first()
     if not user:
         raise HTTPException(status_code=404,detail="Login is incorrect")
-    if  password != user.passwordHash:
+    if  request.password != user.passwordHash:
         raise HTTPException(status_code=404,detail="password is incorrect")
     return {"message": "Login successful", "user_id": user.UserID}
 
@@ -88,7 +118,7 @@ async def create_group(group:GroupBase, user_id:int, db:db_dependency):
     membership = models.GroupMembers(UserID=user_id, GroupID=new_group.GroupID)
     db.add(membership)
     db.commit()
-    return {"group_id": new_group.GroupID, "name": new_group.name, "members": [user_id]}
+    return {"group_id": new_group.GroupID, "name": new_group.name, "members": [user_id],"token":token}
     
 @app.get("/get_join_code", status_code=status.HTTP_200_OK)
 async def get_join_code(group_id:int,db:db_dependency):
