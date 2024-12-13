@@ -104,8 +104,7 @@ async def login(request:LoginRequest, db:db_dependency):
     if not  bcrypt_context.verify(request.password,user.passwordHash):
         raise HTTPException(status_code=404,detail="password is incorrect")
     return {"message": "Login successful", "user_id": user.UserID}
-
-
+# Teraz zamiast zwracać jakis message zwracamy token. Pózniej chyba po froncie będę mógł odczytać sobie wartość ID  i mam esse
 
 ##TODO USERNAME NA LOGIN 
 
