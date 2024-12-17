@@ -3,7 +3,6 @@ import { Text, View, StyleSheet, TouchableOpacity,Button } from 'react-native';
 import { useSession } from '../../hooks/ctx';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 import { GroupCard }  from '../../components/GroupCard';
 import  {Card}  from '@rneui/themed';
 
@@ -21,12 +20,13 @@ export default function Index() {
   const [groups, setGroups] = useState<GroupCardProps[]>([]);
   const getData = async () => {
     try {
-      const value = await AsyncStorage.getItem('token');
+      const value = await AsyncStorage.getItem('JWT');
+      // alert(value);
       if (value !== null) {
-        console.log('Token retrieved:', value); // Debugging
+        alert(value); 
         return value;
       } else {
-        console.log('No token found'); // Debugging
+        console.log('No token found'); 
         return null;
       }
     } catch (e) {
@@ -69,16 +69,17 @@ export default function Index() {
         <TouchableOpacity onPress={signOut}>
           <Text style={styles.signOut}>Log Out</Text>
         </TouchableOpacity>
-        <Button
+        {/* <Button
   onPress={()=>{console.log("CWEL")}}
   title="Learn More"
   color="#841584"
   accessibilityLabel="Learn more about this purple button"
-/>    <Text style={styles.signOut}>{`${token}`}</Text>
+/>    */}
+      <Text style={styles.signOut}>{}</Text>
       </View>
       {/* {groups.map((g:GroupCardProps)=>
       <GroupCard GroupName={g.GroupName} GroupUsers={g.GroupUsers} YourBalance={g.YourBalance}/>)} */}
-      
+
     </SafeAreaView>
   );
 }
