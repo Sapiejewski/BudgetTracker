@@ -1,8 +1,9 @@
 import React, {useState, useEffect}  from 'react';
-import { Text, View, StyleSheet, TouchableOpacity } from 'react-native';
+import { Text, View, StyleSheet, TouchableOpacity,Button } from 'react-native';
 import { useSession } from '../../hooks/ctx';
 import { SafeAreaView } from 'react-native-safe-area-context';
-// import { Ionicons } from '@expo/vector-icons'; // For the plus icon
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import { GroupCard }  from '../../components/GroupCard';
 import  {Card}  from '@rneui/themed';
 
@@ -15,13 +16,30 @@ type GroupCardProps = {
 
 export default function Index() {
   const apiURL = process.env.EXPO_PUBLIC_API_URL;
-
+  const [token, setToken] = useState<string | null>(null);
   const { signOut } = useSession();
   const [groups, setGroups] = useState<GroupCardProps[]>([]);
-
+  const getData = async () => {
+    try {
+      const value = await AsyncStorage.getItem('token');
+      if (value !== null) {
+        console.log('Token retrieved:', value); // Debugging
+        return value;
+      } else {
+        console.log('No token found'); // Debugging
+        return null;
+      }
+    } catch (e) {
+      console.error('Error reading token:', e);
+      return null;
+    }
+  };
   useEffect(() => {
-    fetchGroups();
-
+    const fetchToken = async () => {
+      const storedToken = await getData();
+      setToken(storedToken); // Update state with the token
+    };
+    fetchToken();
   }, []);
 
   const fetchGroups = async () => {
@@ -51,9 +69,15 @@ export default function Index() {
         <TouchableOpacity onPress={signOut}>
           <Text style={styles.signOut}>Log Out</Text>
         </TouchableOpacity>
+        <Button
+  onPress={()=>{console.log("CWEL")}}
+  title="Learn More"
+  color="#841584"
+  accessibilityLabel="Learn more about this purple button"
+/>    <Text style={styles.signOut}>{`${token}`}</Text>
       </View>
-      {groups.map((g:GroupCardProps)=>
-      <GroupCard GroupName={g.GroupName} GroupUsers={g.GroupUsers} YourBalance={g.YourBalance}/>)}
+      {/* {groups.map((g:GroupCardProps)=>
+      <GroupCard GroupName={g.GroupName} GroupUsers={g.GroupUsers} YourBalance={g.YourBalance}/>)} */}
       
     </SafeAreaView>
   );
@@ -126,4 +150,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'blue',
   },
-});
+})

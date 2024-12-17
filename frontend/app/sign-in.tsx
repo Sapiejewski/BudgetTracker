@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { Text, View, Pressable, SafeAreaView, StyleSheet, TextInput, ActivityIndicator } from 'react-native';
 import { useState } from 'react';
 import { useSession } from '../hooks/ctx';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 export default function SignIn() {
@@ -31,7 +32,7 @@ export default function SignIn() {
 
   const handleLogin = async () => {
     if (!validateInputs()) return;
-
+console.log('login', login);
     setLoading(true);
     try {
       const response = await fetch(`${apiURL}/login`, {
@@ -44,7 +45,10 @@ export default function SignIn() {
 
       if (response.ok) {
         const data = await response.json();
-        if (data["message"] === "Login successful"){
+         if (data["access_token"]) {
+          const token = data["access_token"];
+          await AsyncStorage.setItem('JWT', token);
+
           signIn();
           router.replace('/'); 
         }
@@ -53,7 +57,7 @@ export default function SignIn() {
       }
       
     } catch (error) {
-      setError({ password: "An error occurred. Please try again later." });
+      setError({ password: `An error occurred. Please try again later ${error}`  });
     } finally {
       setLoading(false);
     }
